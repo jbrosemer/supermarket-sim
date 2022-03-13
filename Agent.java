@@ -2,46 +2,12 @@ import java.util.Arrays;
 import com.supermarket.*;
 
 public class Agent extends SupermarketComponentImpl {
-	/*
-	public boolean move(int direction){
-		Observation obs = getLastObservation();
-		double x = obs.players[0].position[0];
-		double y = obs.players[0].position[1];
-		if(direction == 0){
-			goNorth();
-		}
-		if(direction == 1){
-			goWest();
-		}
-		if(direction == 2){
-			goSouth();
-		}
-		if(direction == 3){
-			goEast();
-		}
-		Observation obsnew = getLastObservation();
-		double xnew = obs.players[0].position[0];
-
-		double ynew = obs.players[0].position[1];
-		if(ynew > y){
-			if(direction == 2){
-				return true;
-			}
-		}
-		else if(ynew<y){
-		}
-	}
-	public void direct(int direction){
-		Observation obs = getLastObservation();
-	}
-	*/
-
     public Agent() {
 	super();
 	shouldRunExecutionLoop = true;
 	log.info("In Agent constructor.");
     }
-	boolean firsttime = true;
+	boolean firsttime = false;
 	boolean state1 = false;
 	boolean upstate = false;
 	boolean goright = false;
@@ -51,16 +17,20 @@ public class Agent extends SupermarketComponentImpl {
 	boolean goleft = false;
 	boolean moveuntilnocollide = false;
 	boolean turnstate = false;
-	boolean teststate = false;
-	String foody = "strawberry milk";
+	boolean weststate = false;
+	boolean eaststate = false;
+	boolean findcart = true;
+	int iterator = 0;
 	int shelfnumber = -1;
 	int aislenumber = 1;
-	double xold = 1000;
+	double xold = 1000; 
     @Override
     protected void executionLoop() {
 	// this is called every 100ms
 	// put your code in here
 	Observation obs = getLastObservation();
+	System.out.println("Shoppping list: " + Arrays.toString(obs.players[0].shopping_list));	
+	String foody = obs.players[0].shopping_list[0];
 	boolean NCR = obs.northOfCartReturn(0);
 	boolean SCR = obs.southOfCartReturn(0);
 	boolean ACR = obs.atCartReturn(0);
@@ -73,20 +43,40 @@ public class Agent extends SupermarketComponentImpl {
 	else{
 		hascart = true;
 	}
-	System.out.println("Cart Status" + hascart);
 	double x = obs.players[0].position[0];
 	double y = obs.players[0].position[1];
+	System.out.println("iterator " + iterator + " shelfnumber " + shelfnumber);
+	if(findcart){
+		goSouth();
+		interactWithObject();
+		if(hascart){
+			firsttime = true;
+			findcart = false;
+		}
+	}
 	if(firsttime){
+		int[] shelvestovisit = new int[obs.players[0].shopping_list.length];
 		System.out.println("initial state");
-		for (int i = 0;i < obs.shelves.length;i++){
-			System.out.println(i + " " + obs.shelves[i].food);
-			if(obs.shelves[i].food.equals(foody)){
-				shelfnumber = i;
+		for(int j = 0; j <  shelvestovisit.length;j++){
+			for (int i = 0;i < obs.shelves.length;i++){
+					if(obs.shelves[i].food.equals(foody)){
+						shelvestovisit[j] = i;
+				}
+				foody = obs.players[0].shopping_list[j];
 			}
 		}
-		System.out.println(shelfnumber);
-		state1 = true;
-		firsttime = false;
+		Arrays.sort(shelvestovisit);
+		System.out.println("Shelves to visit" + Arrays.toString(shelvestovisit));
+		shelfnumber = shelvestovisit[iterator];
+		if(iterator == 0){
+			state1 = true;
+			firsttime = false;
+		}
+		else{
+			xold = 1000;
+			firsttime = false;
+			weststate = true;
+		}
 	}
 	if(state1){
 		System.out.println("Going to hub");
@@ -109,17 +99,14 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 	if(iniright){
+		System.out.println("ini right");
 		if(!obs.inAisle(0,aislenumber)){
 			goEast();
 		}
 		else{
-			goup = true;
+			goright = true;
 			iniright = false;
 		}
-	}
-	if(goup){
-			goup = false;
-			goright = true;
 	}
 	if(goright){
 		System.out.println("going right");
@@ -172,11 +159,13 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 	if(moveuntilnocollide){
-		System.out.println("not colliding");
+		System.out.println("not colliding looking for " + shelfnumber);
 		//Find Player Direction
+
 		if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
 			if(obs.players[0].direction==2){
 				if(!(x > xold + 1.5)){
+					System.out.println("moving until mid");
 					goEast();
 				}
 				else{
@@ -198,83 +187,34 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 	if(turnstate){
+		System.out.println("grabbing item");
 		goNorth();
 		interactWithObject();
+		iterator++;
 		turnstate = false;
-		teststate = true;
+		firsttime = true;
 	}
-	if(teststate){
+	if(weststate){
+		System.out.println("checking west");
 		goWest();
+		interactWithObject();
 		toggleShoppingCart();
+		weststate = false;
+		eaststate = true;
 	}
-	/*
-	if(obs.inAisle(0,1)){
-		System.out.println("im here 1");
-	}
-	else if(obs.inAisle(0,2)){
-		System.out.println("im here 2");
-	}
-	else if(obs.inAisle(0,3)){
-		System.out.println("im here 3");
-	}
-	else if(obs.inAisle(0,4)){
-		System.out.println("im here 4");
-		
-	}
-	else if(obs.inAisle(0,5)){
-		System.out.println("im here 5");
-	}
-	else{
-		goEast();
-		goEast();
-	}
-	*/
-	/*
-	if(obs.players[0].curr_cart == -1){
-		hascart = false;
-	}
-	else{
-		hascart = true;
-	}
-	System.out.println(hascart);
-	if(NCR){
-		if(hascart){
-			move(3);
-		}
-		else{
-			move(2);
-		}
-	}
-	else if(ACR){
-		if(hascart){
-			move(3);
-		}
-		else{
+	if(eaststate){
+		System.out.println("checking east");
+		goEast();	
+		if(!hascart){
 			interactWithObject();
-			move(2);
+			toggleShoppingCart();
+			goright = true;
 		}
+		else{
+			goleft = true;
+		}
+		eaststate = false;
 	}
-	*/
-
 	System.out.println("Where am i " + x + " " + y);
-		//Going South
-		//System.out.println("Position2 " + Double.toString(obsnew.players[0].position[1]));
-
-		//if (ynew == y){
-		//	move(3);
-		//}
-	//System.out.println(obs.players.length + " players");
-	//System.out.println(obs.carts.length + " carts");
-	//System.out.println(obs.shelves.length + " shelves");
-	//System.out.println(obs.counters.length + " counters");
-	//System.out.println(obs.registers.length + " registers");
-	//System.out.println(obs.cartReturns.length + " cartReturns");
-	// print out the shopping list
-	//System.out.println("Shoppping list: " + Arrays.toString(obs.players[0].shopping_list));
-	//if(northOfCartReturn(obs.players[0])){
-	//	System.out.println("Where am i ");
-	//}
-	//System.out.println("Do I have a cart " + obs.players[0].curr_cart);
-	//System.out.println("Position " + Double.toString(obs.players[0].position[1]));
 	}
 }
