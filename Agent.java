@@ -49,9 +49,13 @@ public class Agent extends SupermarketComponentImpl {
 	boolean godown = false;
 	boolean iniright = false;
 	boolean goleft = false;
-	String foody = "brie cheese";
+	boolean moveuntilnocollide = false;
+	boolean turnstate = false;
+	boolean teststate = false;
+	String foody = "strawberry milk";
 	int shelfnumber = -1;
 	int aislenumber = 1;
+	double xold = 1000;
     @Override
     protected void executionLoop() {
 	// this is called every 100ms
@@ -63,6 +67,13 @@ public class Agent extends SupermarketComponentImpl {
 	boolean AH = obs.inAisleHub(0);
 	boolean RAH = obs.inRearAisleHub(0);
 	boolean hascart = false;
+	if(obs.players[0].curr_cart == -1){
+		hascart = false;
+	}
+	else{
+		hascart = true;
+	}
+	System.out.println("Cart Status" + hascart);
 	double x = obs.players[0].position[0];
 	double y = obs.players[0].position[1];
 	if(firsttime){
@@ -107,18 +118,16 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 	if(goup){
-		if(!obs.defaultCanInteract(obs.shelves[0],obs.players[0])){
-			goNorth();
-		}
-		else{
 			goup = false;
 			goright = true;
-		}
 	}
 	if(goright){
+		System.out.println("going right");
 		if(!RAH){
 			if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
 				goright = false;
+				moveuntilnocollide = true;
+				xold = x;
 			}
 			else{
 				goEast();
@@ -145,9 +154,12 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 	if(goleft){
+		System.out.println("going left");
 		if(!AH){
 			if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
 				goleft = false;
+				moveuntilnocollide = true;
+				xold = x;
 			}
 			else{
 				goWest();
@@ -158,6 +170,42 @@ public class Agent extends SupermarketComponentImpl {
 			godown = true;
 			aislenumber++;
 		}
+	}
+	if(moveuntilnocollide){
+		System.out.println("not colliding");
+		//Find Player Direction
+		if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
+			if(obs.players[0].direction==2){
+				if(!(x > xold + 1.5)){
+					goEast();
+				}
+				else{
+					toggleShoppingCart();
+					moveuntilnocollide = false;
+					turnstate = true;
+				}
+			}
+			else if(obs.players[0].direction==3){
+				if(!(x < xold - 1.5)){
+					goWest();
+				}
+				else{
+					toggleShoppingCart();
+					moveuntilnocollide = false;
+					turnstate = true;
+				}
+			}
+		}
+	}
+	if(turnstate){
+		goNorth();
+		interactWithObject();
+		turnstate = false;
+		teststate = true;
+	}
+	if(teststate){
+		goWest();
+		toggleShoppingCart();
 	}
 	/*
 	if(obs.inAisle(0,1)){
