@@ -121,9 +121,16 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 		else{
+			if(aislenumber == 5){
+				goSouth();
+				goSouth();
+				goSouth();
+				goSouth();
+				goSouth();
+			}
 			goright = false;
-			godown = true;
-			aislenumber++;
+			goleft = true;
+			//aislenumber++;
 		}
 	}
 	if(godown){
@@ -141,16 +148,16 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 	if(goleft){
-		System.out.println("going left");
+		System.out.println("going left" + aislenumber);
 		if(!AH){
-			if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
-				goleft = false;
-				moveuntilnocollide = true;
-				xold = x;
-			}
-			else{
-				goWest();
-			}
+			//if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
+			//	goleft = false;
+			//	moveuntilnocollide = true;
+			//	xold = x;
+			//}
+			//else{
+			goWest();
+			goWest();
 		}
 		else{
 			goleft = false;
