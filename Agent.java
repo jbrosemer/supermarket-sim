@@ -17,7 +17,6 @@ public class Agent extends SupermarketComponentImpl {
 	boolean goleft = false;
 	boolean moveuntilnocollide = false;
 	boolean turnstate = false;
-	boolean weststate = false;
 	boolean eaststate = false;
 	boolean findcart = true;
 	int iterator = 0;
@@ -41,6 +40,7 @@ public class Agent extends SupermarketComponentImpl {
 		hascart = false;
 	}
 	else{
+		System.out.println("Cart Quantity" + Arrays.toString(obs.carts[0].contents_quant));
 		hascart = true;
 	}
 	double x = obs.players[0].position[0];
@@ -63,11 +63,22 @@ public class Agent extends SupermarketComponentImpl {
 						shelvestovisit[j] = i;
 				}
 				foody = obs.players[0].shopping_list[j];
+				if(foody == "fresh fish"){
+					shelvestovisit[j+1] = 31;
+				}
+				else if(foody == "prepared foods"){
+					shelvestovisit[j+1] = 32;
+				}
 			}
 		}
 		Arrays.sort(shelvestovisit);
 		System.out.println("Shelves to visit" + Arrays.toString(shelvestovisit));
-		shelfnumber = shelvestovisit[iterator];
+		if(iterator < shelvestovisit.length){
+			shelfnumber = shelvestovisit[iterator];
+		}
+		else{
+			goEast();
+		}
 		if(iterator == 0){
 			state1 = true;
 			firsttime = false;
@@ -75,7 +86,7 @@ public class Agent extends SupermarketComponentImpl {
 		else{
 			xold = 1000;
 			firsttime = false;
-			weststate = true;
+			eaststate = true;
 		}
 	}
 	if(state1){
@@ -167,11 +178,9 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	if(moveuntilnocollide){
 		System.out.println("not colliding looking for " + shelfnumber);
-		//Find Player Direction
-
 		if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
 			if(obs.players[0].direction==2){
-				if(!(x > xold + 1.5)){
+				if(!(x > xold + 1)){
 					System.out.println("moving until mid");
 					goEast();
 				}
@@ -197,22 +206,20 @@ public class Agent extends SupermarketComponentImpl {
 		System.out.println("grabbing item");
 		goNorth();
 		interactWithObject();
+		System.out.println("Player is holding " + obs.players[0].holding_food);
+		if(obs.players[0].holding_food == null){
+			goNorth();
+			interactWithObject();
+		}
 		iterator++;
 		turnstate = false;
 		firsttime = true;
-	}
-	if(weststate){
-		System.out.println("checking west");
-		goWest();
-		interactWithObject();
-		toggleShoppingCart();
-		weststate = false;
-		eaststate = true;
 	}
 	if(eaststate){
 		System.out.println("checking east");
 		goEast();	
 		if(!hascart){
+			interactWithObject();
 			interactWithObject();
 			toggleShoppingCart();
 			goright = true;
