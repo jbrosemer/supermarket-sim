@@ -1,4 +1,7 @@
 import java.util.Arrays;
+
+import javax.lang.model.util.ElementScanner14;
+
 import com.supermarket.*;
 
 public class Agent extends SupermarketComponentImpl {
@@ -35,6 +38,13 @@ public class Agent extends SupermarketComponentImpl {
 	boolean ACR = obs.atCartReturn(0);
 	boolean AH = obs.inAisleHub(0);
 	boolean RAH = obs.inRearAisleHub(0);
+	boolean BC;
+	if(obs.players[0].position[0] >= 17.5){
+		BC = true;
+	}
+	else{
+		BC = false;
+	}
 	boolean hascart = false;
 	if(obs.players[0].curr_cart == -1){
 		hascart = false;
@@ -62,31 +72,40 @@ public class Agent extends SupermarketComponentImpl {
 					if(obs.shelves[i].food.equals(foody)){
 						shelvestovisit[j] = i;
 				}
+				if(foody.equals("fresh fish")){
+					shelvestovisit[j] = 31;
+				}
+				else if(foody.equals("prepared foods")){
+					shelvestovisit[j] = 32;
+				}
 				foody = obs.players[0].shopping_list[j];
-				if(foody == "fresh fish"){
-					shelvestovisit[j+1] = 31;
-				}
-				else if(foody == "prepared foods"){
-					shelvestovisit[j+1] = 32;
-				}
 			}
 		}
 		Arrays.sort(shelvestovisit);
 		System.out.println("Shelves to visit" + Arrays.toString(shelvestovisit));
 		if(iterator < shelvestovisit.length){
+			System.out.println("SHELVES LENGTH" + shelvestovisit.length);
 			shelfnumber = shelvestovisit[iterator];
+			if(iterator == 0){
+				state1 = true;
+				firsttime = false;
+			}
+			else{
+				xold = 1000;
+				firsttime = false;
+				if(shelfnumber < 30){
+					eaststate = true;
+				}
+				else if(shelfnumber == 31){
+					System.out.println("TIME TO GO TO FRESH FISH");
+				}
+				else{
+					System.out.println("TIME TO GO TO PREPARED FOODS");
+				}
+			}
 		}
 		else{
-			goEast();
-		}
-		if(iterator == 0){
-			state1 = true;
-			firsttime = false;
-		}
-		else{
-			xold = 1000;
-			firsttime = false;
-			eaststate = true;
+			System.out.println("TIME TO GO TO CHECKOUT");
 		}
 	}
 	if(state1){
@@ -229,6 +248,6 @@ public class Agent extends SupermarketComponentImpl {
 		}
 		eaststate = false;
 	}
-	System.out.println("Where am i " + x + " " + y);
+	//System.out.println("Where am i " + x + " " + y);
 	}
 }
