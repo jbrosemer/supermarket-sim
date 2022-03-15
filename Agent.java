@@ -21,7 +21,19 @@ public class Agent extends SupermarketComponentImpl {
 	boolean moveuntilnocollide = false;
 	boolean turnstate = false;
 	boolean eaststate = false;
+	boolean justgothere = false;
+	boolean doneresetting = false;
+	boolean at31 = false;
+	boolean at32 = false;
+	boolean done31 = false;
+	boolean done32 = false;
 	boolean findcart = true;
+	boolean endgame = false;
+	boolean endgame1 = false;
+	boolean endgame2 = false;
+	boolean endgame3 = false;
+	boolean havecart = false;
+	boolean findingfish = false;
 	int iterator = 0;
 	int shelfnumber = -1;
 	int aislenumber = 1;
@@ -72,10 +84,10 @@ public class Agent extends SupermarketComponentImpl {
 					if(obs.shelves[i].food.equals(foody)){
 						shelvestovisit[j] = i;
 				}
-				if(foody.equals("fresh fish")){
+				if(foody.equals("prepared foods")){
 					shelvestovisit[j] = 31;
 				}
-				else if(foody.equals("prepared foods")){
+				else if(foody.equals("fresh fish")){
 					shelvestovisit[j] = 32;
 				}
 				foody = obs.players[0].shopping_list[j];
@@ -96,11 +108,14 @@ public class Agent extends SupermarketComponentImpl {
 				if(shelfnumber < 30){
 					eaststate = true;
 				}
-				else if(shelfnumber == 31){
-					System.out.println("TIME TO GO TO FRESH FISH");
-				}
-				else{
-					System.out.println("TIME TO GO TO PREPARED FOODS");
+				else if ((shelfnumber == 31) || (shelfnumber == 32)) {
+					System.out.println("interacting for fish");
+					goEast();
+					interactWithObject();
+					interactWithObject();
+					toggleShoppingCart();
+					findingfish = true;
+					firsttime = false;
 				}
 			}
 		}
@@ -250,6 +265,176 @@ public class Agent extends SupermarketComponentImpl {
 		}
 		eaststate = false;
 	}
+	if(findingfish){
+		if (shelfnumber == 31) {
+			// yeet yourself to the right side
+			if (((x+.5) < obs.counters[0].position[0]) && !doneresetting) {
+				System.out.println("going east");
+				goEast();
+			}
+			else if ((!((x+.5) < obs.counters[0].position[0])) && !justgothere) {
+				System.out.println("line 78");
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				justgothere = true;
+				doneresetting = true;
+			}
+			else if ((doneresetting) && (shelfnumber == 31)) {
+				
+				// yeet yourself up if you're below
+				if (y > obs.counters[0].position[1] && !at31) {
+					System.out.println("going north");
+					goNorth();
+				}
+	
+				// otherwise yeet yourself down
+				if (y < obs.counters[0].position[1] && !at31) {
+					System.out.println("going south");
+					goSouth();
+				}
+	
+				if (java.lang.Math.abs(y - obs.counters[0].position[1]) <= .15) {
+					at31 = true;
+					// orient yourself so you're always pointing north
+					goSouth();
+					goSouth();
+					goSouth();
+					goNorth();
+					System.out.println("at shelf 31 ready to interact");
+				}
+			}
+	
+			if ((shelfnumber == 31) && at31){ //&& !done31) {
+				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
+				toggleShoppingCart();
+				goEast();
+				interactWithObject();
+				interactWithObject();
+				goNorth();
+				interactWithObject();
+				interactWithObject();
+				toggleShoppingCart();
+				iterator++;
+				findingfish = false;
+				firsttime = true;
+				//done31 = true;
+				System.out.println("done getting prepared foods");
+			}
+	
+		}
+	
+		if (shelfnumber == 32) {
+			// yeet yourself to the right side
+			if (((x+.5) < obs.counters[1].position[0]) && !doneresetting) {
+				System.out.println("going east");
+				goEast();
+			}
+			else if ((!((x+.5) < obs.counters[1].position[0])) && !justgothere) {
+				System.out.println("line 78");
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				justgothere = true;
+				doneresetting = true;
+			}
+			else if ((doneresetting) && (shelfnumber == 32)) {
+	
+				// yeet yourself up if you're below
+				if (y > obs.counters[1].position[1] && !at32) {
+					System.out.println("going north");
+					goNorth();
+				}
+	
+				// otherwise yeet yourself down
+				if (y < obs.counters[1].position[1] && !at32) {
+					System.out.println("going south");
+					goSouth();
+				}
+	
+				if (java.lang.Math.abs(y - obs.counters[1].position[1]) <= .15) {
+					at32 = true;
+					// orient yourself so you're always pointing north
+					goSouth();
+					goSouth();
+					goSouth();
+					goNorth();
+					System.out.println("at shelf 32 ready to interact");
+				}
+			}
+	
+			if ((shelfnumber == 32) && at32){ //&& !done32){
+				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
+				toggleShoppingCart();
+				goEast();
+				interactWithObject();
+				interactWithObject();
+				goNorth();
+				interactWithObject();
+				interactWithObject();
+				toggleShoppingCart();
+				done32 = true;
+				iterator++;
+				findingfish = false;
+				firsttime = true;
+				System.out.println("done getting fish");
+			}
+	
+		}
+	}
+		//after last item is picked up put it into cart and take cart
+		if (endgame){
+			if(shelfnumber < 30){
+				goEast();
+				interactWithObject();
+				toggleShoppingCart();
+			}
+			havecart = true;
+			endgame= false;
+		}
+	
+		//once last item is in, go west towards checkout
+		if (havecart){
+			
+			// firsttime= false;
+			goWest();
+			// goWest();
+			// goWest();
+			// goWest();
+			
+			System.out.println("ENDGAME");
+			System.out.println("boolean value: " + obs.inAisleHub(0));
+			//if in red aisle, go up towards checkout
+			if (obs.inAisleHub(0)){
+				endgame1 = true;
+				System.out.println("ENDGAME 1");
+				havecart= false;
+			}
+			
+		}
+		//go up to checkout
+		if (endgame1){
+			goNorth();
+		
+			if(!obs.belowAisle(0,1)){	
+		
+				endgame1= false;
+				endgame2=true;
+			}
+		}
+		if (endgame2){
+			goWest();
+			if (!obs.inAisleHub(0)){
+				endgame3= true;
+				endgame2= false;
+				
+			}
+		}
+		if (endgame3){
+			goSouth();
+		}
 	//System.out.println("Where am i " + x + " " + y);
 	}
 }
