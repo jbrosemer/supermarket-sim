@@ -106,6 +106,8 @@ public class Agent extends SupermarketComponentImpl {
 		}
 		else{
 			System.out.println("TIME TO GO TO CHECKOUT");
+			firsttime = false;
+			endgame = true;
 		}
 	}
 	if(state1){
