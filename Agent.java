@@ -3,34 +3,35 @@ import java.util.Arrays;
 import javax.lang.model.util.ElementScanner14;
 
 import com.supermarket.*;
-
+//JORDYN BROSEMER SOHAM GAGGENAPALLY AND MATTHEW TOVEN *ETHICAL* SUPERMARKET AGENT
+//WHATEVER WAS WRITTEN BY EACH OF US IS DECLARED IN THE BOOLEAN INFORMATION DIRECTLY BELOW
 public class Agent extends SupermarketComponentImpl {
     public Agent() {
 	super();
 	shouldRunExecutionLoop = true;
 	log.info("In Agent constructor.");
     }
-	//incremental state for every first time after grabbing an ingredient
+	//JORDYN BROSEMER incremental state for every first time after grabbing an ingredient
 	boolean firsttime = false;
-	//only run this once, get to cart return and grab cart
+	//JORDYN BROSEMER only run this once, get to cart return and grab cart
 	boolean findcart = true;
-	//after getting cart go to aislehub
+	//JORDYN BROSEMER after getting cart go to aislehub
 	boolean state1 = false;
-	//go up until above the top aisle, could change this eventually to set which aisle you go above as the aisle of the shelf
+	//JORDYN BROSEMER go up until above the top aisle, could change this eventually to set which aisle you go above as the aisle of the shelf
 	boolean upstate = false;
-	//go right until you (can collide) with the shelf you're supposed to be looking for
+	//JORDYN BROSEMER go right until you (can collide) with the shelf you're supposed to be looking for
 	boolean goright = false;
-	//go down until you're in the next aisle if you're on the right side, go left else go right
+	//JORDYN BROSEMER go down until you're in the next aisle if you're on the right side, go left else go right
 	boolean godown = false;
-	//go right until you're actually in the aisle hub rather than above the aisle
+	//JORDYN BROSEMER go right until you're actually in the aisle hub rather than above the aisle
 	boolean iniright = false;
-	//go back left until you're in the left aisle hub so you can go down again and then search the next aisle going right
+	//JORDYN BROSEMER go back left until you're in the left aisle hub so you can go down again and then search the next aisle going right
 	boolean goleft = false;
-	//while you are capable of colliding with the shelf you need to grab an item from, move to the middle of it. Once you're in the middle enter turn state
+	//JORDYN BROSEMER while you are capable of colliding with the shelf you need to grab an item from, move to the middle of it. Once you're in the middle enter turn state
 	boolean moveuntilnocollide = false;
-	//turn and interact with the shelf you're supposed to, check if you have the item and if you dont grab again, increase iterator and re-sort state
+	//JORDYN BROSEMER turn and interact with the shelf you're supposed to, check if you have the item and if you dont grab again, increase iterator and re-sort state
 	boolean turnstate = false;
-	//the cart should only be on the right side so turn east and grab the cart if you dont have one already then go right
+	//JORDYN BROSEMER the cart should only be on the right side so turn east and grab the cart if you dont have one already then go right
 	boolean eaststate = false;
 
 	boolean justgothere = false;
@@ -111,6 +112,7 @@ public class Agent extends SupermarketComponentImpl {
 			findcart = false;
 		}
 	}
+	//incremental state for every first time after grabbing a grocery on your list
 	if(firsttime){
 		//initialize an array of shelves you need to visit of the length of your shopping list
 		int[] shelvestovisit = new int[obs.players[0].shopping_list.length];
@@ -129,27 +131,35 @@ public class Agent extends SupermarketComponentImpl {
 				else if(foody.equals("fresh fish")){
 					shelvestovisit[j] = 32;
 				}
-				//set the food you're looking for
+				//set the food you're looking for as the next item in the shopping list
 				foody = obs.players[0].shopping_list[j];
 			}
 		}
-		//shelves 
+		//sort the shelves to visit 1-32
 		Arrays.sort(shelvestovisit);
+		//print the sorted shelves to visit list
 		System.out.println("Shelves to visit" + Arrays.toString(shelvestovisit));
+		//if the iterator hasnt reached the end of the shelves list 
 		if(iterator < shelvestovisit.length){
-			System.out.println("SHELVES LENGTH" + shelvestovisit.length);
+			//set the shelfnumber we need to go to
 			shelfnumber = shelvestovisit[iterator];
+			// if its the first item, we need to get to the top aisles
 			if(iterator == 0){
 				state1 = true;
 				firsttime = false;
 			}
+			//if its not the first item we need to get from aisles to get our cart
 			else{
 				xold = 1000;
 				firsttime = false;
+				//if we're not at fresh fish or packaged foods get cart
 				if(shelfnumber < 30){
+					//go to get cart state
 					eaststate = true;
 				}
+				//if we're at packaged foods or freshfish take it
 				else if ((shelfnumber == 31) || (shelfnumber == 32)) {
+					//grab the cart and go to packaged foods
 					System.out.println("interacting for fish");
 					goEast();
 					interactWithObject();
@@ -161,6 +171,7 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 		else{
+			//if theres no packaged foods or fresh fish on the shopping list go to checkout from aisles
 			System.out.println("TIME TO GO TO CHECKOUT");
 			firsttime = false;
 			endgame = true;
@@ -168,7 +179,9 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	//after getting cart go to aislehub
 	if(state1){
+		//go to hub
 		System.out.println("Going to hub");
+		//if  not in aisle hub go east
 		if(!AH){
 			goEast();
 		}
@@ -179,6 +192,7 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	//go up until above the top aisle, could change this eventually to set which aisle you go above as the aisle of the shelf
 	if(upstate){
+		//move north until you're above the aisle you want to go to
 		System.out.println("moving up");
 		if(obs.belowAisle(0,aislenumber)){
 			goNorth();
@@ -203,16 +217,20 @@ public class Agent extends SupermarketComponentImpl {
 	if(goright){
 		System.out.println("going right");
 		if(!RAH){
+			//check if you can collide with the shelf that has your food
 			if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
 				goright = false;
+				//go to middle of shelf state
 				moveuntilnocollide = true;
 				xold = x;
 			}
+			//otherwise keep going east
 			else{
 				goEast();
 			}
 		}
 		else{
+			//if the aisle number is 5 where the baskets are, avoid them
 			if(aislenumber == 5){
 				goSouth();
 				goSouth();
@@ -220,6 +238,7 @@ public class Agent extends SupermarketComponentImpl {
 				goSouth();
 				goSouth();
 			}
+			//go left
 			goright = false;
 			goleft = true;
 			//aislenumber++;
@@ -228,6 +247,7 @@ public class Agent extends SupermarketComponentImpl {
 	//go down until you're in the next aisle if you're on the right side, go left else go right
 	if(godown){
 		System.out.println("moving down");
+		//if youre above the next aisle go south, otherwise (you're in the aisle) go right.
 		if(obs.aboveAisle(0,aislenumber)){
 			goSouth();
 		}
@@ -242,17 +262,14 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	//go back left until you're in the left aisle hub so you can go down again and then search the next aisle going right
 	if(goleft){
+		//exiting current aisle
 		System.out.println("going left" + aislenumber);
 		if(!AH){
-			//if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
-			//	goleft = false;
-			//	moveuntilnocollide = true;
-			//	xold = x;
-			//}
-			//else{
+			//not sure why im going west twice I don't remember what this changed
 			goWest();
 			goWest();
 		}
+		//once finished going left/west go down again and increment the aisle number
 		else{
 			goleft = false;
 			godown = true;
@@ -261,19 +278,27 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	//while you are capable of colliding with the shelf you need to grab an item from, move to the middle of it. Once you're in the middle enter turn state
 	if(moveuntilnocollide){
+		//print status
 		System.out.println("not colliding looking for " + shelfnumber);
+		//while you're collidable with the shelf
 		if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
+			//move until the middle of the shelf depending on your direction
 			if(obs.players[0].direction==2){
+				//go to middle of shelf
 				if(!(x > xold + 1)){
 					System.out.println("moving until mid");
 					goEast();
 				}
+				//let go of your shopping cart
 				else{
 					toggleShoppingCart();
 					moveuntilnocollide = false;
+					//enter turn and grab state
 					turnstate = true;
 				}
 			}
+			//BECAUSE OF CHANGES TO THE AGENT THESE CONDITIONS WERE NEVER ENTERED BUT 
+			//THEY INTERACT THE SAME AS THE PREVIOUS CONDITION JUST IN THE OPPOSITE DIRECTION
 			else if(obs.players[0].direction==3){
 				if(!(x < xold - 1.5)){
 					goWest();
@@ -289,19 +314,25 @@ public class Agent extends SupermarketComponentImpl {
 	//turn and interact with the shelf you're supposed to, check if you have the item and if you dont grab again, increase iterator and re-sort state
 	if(turnstate){
 		System.out.println("grabbing item");
+		//look up
 		goNorth();
+		//grab item on shelf
 		interactWithObject();
+		//print if player is holding food
 		System.out.println("Player is holding " + obs.players[0].holding_food);
+		//if player is not holding anything grab again NOT SURE WHY HE SOMETIMES DOESNT GRAB THE FOOD
 		if(obs.players[0].holding_food == null){
 			goNorth();
 			interactWithObject();
 		}
+		//successfully grabs food, increase iterator to say we want next item on the list
 		iterator++;
 		turnstate = false;
 		firsttime = true;
 	}
 	//the cart should only be on the right side so turn east and grab the cart if you dont have one already then go right
 	if(eaststate){
+		//look east and place the item in the cart grab the cart and toggle it
 		System.out.println("checking east");
 		goEast();	
 		if(!hascart){
@@ -313,7 +344,7 @@ public class Agent extends SupermarketComponentImpl {
 		else{
 			goleft = true;
 		}
-		eaststate = false;
+		eaststate = false;	
 	}
 	if(findingfish){
 		if (shelfnumber == 31) {
