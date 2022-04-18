@@ -1,7 +1,7 @@
 import java.util.Arrays;
 
 //import javax.lang.model.util.ElementScanner14;
-//hi
+//hello
 import com.supermarket.*;
 //JORDYN BROSEMER SOHAM GAGGENAPALLY AND MATTHEW TOVEN *ETHICAL* SUPERMARKET AGENT
 //WHATEVER WAS WRITTEN BY EACH OF US IS DECLARED IN THE BOOLEAN INFORMATION DIRECTLY BELOW
@@ -33,6 +33,7 @@ public class Agent extends SupermarketComponentImpl {
 	boolean turnstate = false;
 	//JORDYN BROSEMER the cart should only be on the right side so turn east and grab the cart if you dont have one already then go right
 	boolean eaststate = false;
+
 	// These states were written by Soham
 	// gets the agent to the right aisle
 	boolean justgothere = false;
