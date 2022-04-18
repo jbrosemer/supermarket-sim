@@ -34,6 +34,11 @@ public class Agent extends SupermarketComponentImpl {
 	//JORDYN BROSEMER the cart should only be on the right side so turn east and grab the cart if you dont have one already then go right
 	boolean eaststate = false;
 
+	boolean movenorms = false;
+	boolean interactingnorms = false;
+	//JORDYN BROSEMER norm state that prevents the agent from walking into a wall 
+	boolean avoidwall = false;
+
 	// These states were written by Soham
 	// gets the agent to the right aisle
 	boolean justgothere = false;
@@ -113,6 +118,18 @@ public class Agent extends SupermarketComponentImpl {
 	double y = obs.players[0].position[1];
 	//print out which item # in the list we're looking for and the shelfnumber we're looking for 
 	System.out.println("iterator " + iterator + " shelfnumber " + shelfnumber);
+	if(movenorms){
+		//PUT NORMS THAT INVOLVE MOVEMENT HERE
+		if(nearplayers){
+
+		}
+		if(bumpingintoplayers){
+
+		}
+	}
+	if(interactingnorms){
+		//PUT NORMS THAT TEST INTERACTION HERE
+	}
 	//only run this once, get to cart return and grab cart
 	if(findcart){
 		//go south and interact until you reach the cart return
