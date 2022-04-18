@@ -1,6 +1,6 @@
 import java.util.Arrays;
 
-import javax.lang.model.util.ElementScanner14;
+//import javax.lang.model.util.ElementScanner14;
 
 import com.supermarket.*;
 //JORDYN BROSEMER SOHAM GAGGENAPALLY AND MATTHEW TOVEN *ETHICAL* SUPERMARKET AGENT
@@ -33,20 +33,32 @@ public class Agent extends SupermarketComponentImpl {
 	boolean turnstate = false;
 	//JORDYN BROSEMER the cart should only be on the right side so turn east and grab the cart if you dont have one already then go right
 	boolean eaststate = false;
-
+	// These states were written by Soham
+	// gets the agent to the right aisle
 	boolean justgothere = false;
+	// resets the agent to the right horizontal position so they don't hit the counters
 	boolean doneresetting = false;
+	// moves the agent to the prepared foods counter
 	boolean at31 = false;
+	// moves the agent to the fresh fish counter
 	boolean at32 = false;
+	// agent is done getting prepared foods and has put it in the cart
 	boolean done31 = false;
+	// agent is done getting fresh fish and has put it in the cart
 	boolean done32 = false;
+	// agent is done shopping and near register, so we can orient ourselves and check out
+	boolean nearregister = false;
 
 
+	//States written by Matthew Toven
 	boolean endgame = false;
 	boolean endgame1 = false;
 	boolean endgame2 = false;
 	boolean endgame3 = false;
 	boolean havecart = false;
+
+
+
 	boolean findingfish = false;
 	//iterator for the index of the shelvestovisit list
 	int iterator = 0;
@@ -347,12 +359,15 @@ public class Agent extends SupermarketComponentImpl {
 		eaststate = false;	
 	}
 	if(findingfish){
+		// this state is split into two more mini states, the first one deals with prepared foods and the second deals with fresh fish
 		if (shelfnumber == 31) {
+			// first we move the agent to the right
 			// yeet yourself to the right side
 			if (((x+.5) < obs.counters[0].position[0]) && !doneresetting) {
 				System.out.println("going east");
 				goEast();
 			}
+			// we need to reset the agent a little bit so they/their cart doesn't hit the counter(s)
 			else if ((!((x+.5) < obs.counters[0].position[0])) && !justgothere) {
 				System.out.println("line 78");
 				goWest();
@@ -362,8 +377,9 @@ public class Agent extends SupermarketComponentImpl {
 				justgothere = true;
 				doneresetting = true;
 			}
+			// we're done moving ourselves horizontally
 			else if ((doneresetting) && (shelfnumber == 31)) {
-				
+				// next bit is to move up or down to the appropriate counter
 				// yeet yourself up if you're below
 				if (y > obs.counters[0].position[1] && !at31) {
 					System.out.println("going north");
@@ -376,6 +392,7 @@ public class Agent extends SupermarketComponentImpl {
 					goSouth();
 				}
 	
+				// this is a quick way to orient the agent in a certain way to standardize the food getting process from the counter
 				if (java.lang.Math.abs(y - obs.counters[0].position[1]) <= .15) {
 					at31 = true;
 					// orient yourself so you're always pointing north
@@ -387,6 +404,7 @@ public class Agent extends SupermarketComponentImpl {
 				}
 			}
 	
+			// now we get the food
 			if ((shelfnumber == 31) && at31){ //&& !done31) {
 				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
 				toggleShoppingCart();
@@ -406,6 +424,7 @@ public class Agent extends SupermarketComponentImpl {
 	
 		}
 	
+		// this is practically the same execution as the previous state, see above for comments
 		if (shelfnumber == 32) {
 			// yeet yourself to the right side
 			if (((x+.5) < obs.counters[1].position[0]) && !doneresetting) {
@@ -465,8 +484,7 @@ public class Agent extends SupermarketComponentImpl {
 	
 		}
 	}
-		//after last item is picked up put it into cart and take cart
-		if (endgame){
+	if (endgame){
 			if(shelfnumber < 30){
 				goEast();
 				interactWithObject();
@@ -514,7 +532,26 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 		if (endgame3){
+			System.out.println("y|"+obs.players[0].position[1]+"|ry|"+obs.counters[0].position[1]);
+			if ((obs.players[0].position[1] - 2) >= obs.counters[0].position[1]) {
+				endgame3 = false;
+				nearregister = true;
+			}
 			goSouth();
+		}
+		if (nearregister) {
+			System.out.println("line 516");
+			goSouth();
+			goSouth();
+			goWest();
+			goWest();
+			goWest();
+			goWest();
+			toggleShoppingCart();
+			goNorth();
+			interactWithObject();
+			interactWithObject();
+			interactWithObject();
 		}
 	//System.out.println("Where am i " + x + " " + y);
 	}
