@@ -45,19 +45,35 @@ public class Agent extends SupermarketComponentImpl {
 	boolean avoidwall = false;
 
 	// These states were written by Soham
-	// gets the agent to the right aisle
+	// SOHAM GAGGENAPALLY holds whether or not the agent has food either in cart or in hand, this is used for the ShopliftingNorm
+	boolean haspaid = false;
+	// SOHAM GAGGENAPALLY by default is true, will turn once the person has paid
+	boolean ShopliftingNorm = true;
+	// SOHAM GAGGENAPALLY the following three hold whether or not the agent didn't finish/was interrupted during an interaction
+	boolean startinteraction = false;
+	boolean endinteraction = false;
+	boolean brokeinteraction = false;	
+	// SOHAM GAGGENAPALLY this will turn true if the agent cancels an interaction in the middle
+	boolean InteractionCancellationNorm = false;
+	// SOHAM GAGGENAPALLY this is a counter that we need to track time
+	int timeatexit = 0;
+	// SOHAM GAGGENAPALLY this will turn true if the agent stays in the exit for more than 30 seconds
+	boolean BlockingExitNorm = false;
+	// SOHAM GAGGENAPALLY this will turn true if the agent tries to exit through the entrance
+	boolean EntranceOnlyNorm = false;
+	// SOHAM GAGGENAPALLY gets the agent to the right aisle
 	boolean justgothere = false;
-	// resets the agent to the right horizontal position so they don't hit the counters
+	// SOHAM GAGGENAPALLY resets the agent to the right horizontal position so they don't hit the counters
 	boolean doneresetting = false;
-	// moves the agent to the prepared foods counter
+	// SOHAM GAGGENAPALLY moves the agent to the prepared foods counter
 	boolean at31 = false;
-	// moves the agent to the fresh fish counter
+	// SOHAM GAGGENAPALLY moves the agent to the fresh fish counter
 	boolean at32 = false;
-	// agent is done getting prepared foods and has put it in the cart
+	// SOHAM GAGGENAPALLY agent is done getting prepared foods and has put it in the cart
 	boolean done31 = false;
-	// agent is done getting fresh fish and has put it in the cart
+	// SOHAM GAGGENAPALLY agent is done getting fresh fish and has put it in the cart
 	boolean done32 = false;
-	// agent is done shopping and near register, so we can orient ourselves and check out
+	// SOHAM GAGGENAPALLY agent is done shopping and near register, so we can orient ourselves and check out
 	boolean nearregister = false;
 
 
@@ -557,6 +573,7 @@ public class Agent extends SupermarketComponentImpl {
 			// now we get the food
 			if ((shelfnumber == 31) && at31){ //&& !done31) {
 				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
+				startinteraction = true;
 				toggleShoppingCart();
 				goEast();
 				interactWithObject();
@@ -565,10 +582,25 @@ public class Agent extends SupermarketComponentImpl {
 				interactWithObject();
 				interactWithObject();
 				toggleShoppingCart();
-				iterator++;
-				findingfish = false;
-				firsttime = true;
+				endinteraction = true;
+				// iterator++;
+				// findingfish = false;
+				// firsttime = true;
 				//done31 = true;
+				if (startinteraction && endinteraction) {
+					iterator++;
+					findingfish = false;
+					firsttime = true;
+					startinteraction = false;
+					endinteraction = false;
+					InteractionCancellationNorm = false;
+				}
+				else {
+					InteractionCancellationNorm = true;
+					startinteraction = false;
+					endinteraction = false;
+					System.out.println("Agent cancelled their interaction");
+				}
 				System.out.println("done getting prepared foods");
 			}
 	
@@ -617,6 +649,7 @@ public class Agent extends SupermarketComponentImpl {
 	
 			if ((shelfnumber == 32) && at32){ //&& !done32){
 				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
+				startinteraction = true;
 				toggleShoppingCart();
 				goEast();
 				interactWithObject();
@@ -625,10 +658,26 @@ public class Agent extends SupermarketComponentImpl {
 				interactWithObject();
 				interactWithObject();
 				toggleShoppingCart();
-				done32 = true;
-				iterator++;
-				findingfish = false;
-				firsttime = true;
+				endinteraction = true;
+				// done32 = true;
+				// iterator++;
+				// findingfish = false;
+				// firsttime = true;
+				if (startinteraction && endinteraction) {
+					done32 = true;
+					iterator++;
+					findingfish = false;
+					firsttime = true;
+					startinteraction = false;
+					endinteraction = false;
+					InteractionCancellationNorm = false;
+				}
+				else {
+					InteractionCancellationNorm = true;
+					startinteraction = false;
+					endinteraction = false;
+					System.out.println("Agent cancelled their interaction");
+				}
 				System.out.println("done getting fish");
 			}
 	
@@ -682,7 +731,7 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 		if (endgame3){
-			System.out.println("y|"+obs.players[0].position[1]+"|ry|"+obs.counters[0].position[1]);
+			// System.out.println("y|"+obs.players[0].position[1]+"|ry|"+obs.counters[0].position[1]);
 			if ((obs.players[0].position[1] - 2) >= obs.counters[0].position[1]) {
 				endgame3 = false;
 				nearregister = true;
@@ -690,18 +739,112 @@ public class Agent extends SupermarketComponentImpl {
 			goSouth();
 		}
 		if (nearregister) {
-			System.out.println("line 516");
-			goSouth();
-			goSouth();
-			goWest();
-			goWest();
-			goWest();
-			goWest();
-			toggleShoppingCart();
-			goNorth();
-			interactWithObject();
-			interactWithObject();
-			interactWithObject();
+			// this first part takes care of checking how long we're near the exit, since the loop runs every 100 ms, 300 timesteps (aka 30 seconds)
+			if (timeatexit < 300) {
+				timeatexit = timeatexit + 1;
+				BlockingExitNorm = false;
+			}
+			else {
+				BlockingExitNorm = true;
+				System.out.println("Agent has been blocking exit for almost 30 seconds, needs to move");
+				// need to check our move booleans to make sure we can move first
+				// if we're static for too long we should move out of the way and then come back
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+				timeatexit = 0;
+				BlockingExitNorm = false;
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+			}
+			
+
+			// this second part takes care of paying and leaving, along with the norms relevant to those actions
+			if (!haspaid) {
+				System.out.println("line 769");
+				goSouth();
+				goSouth();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				toggleShoppingCart();
+				goNorth();
+				startinteraction = true;
+				interactWithObject();
+				interactWithObject();
+				interactWithObject();
+				endinteraction = true;
+				if (startinteraction && endinteraction) {
+					startinteraction = false;
+					endinteraction = false;
+					haspaid = true;
+					InteractionCancellationNorm = false;
+				}
+				else {
+					InteractionCancellationNorm = true;
+					startinteraction = false;
+					endinteraction = false;
+					haspaid = false;
+					System.out.println("Agent cancelled their interaction");
+				}
+				// System.out.println("let's check if we've actually paid");
+				if (haspaid) {
+					// find total in cart
+					int beforequant = 0;
+					for(int preitemquant = 0; preitemquant<obs.carts[0].contents_quant.length; preitemquant++) {
+						beforequant = beforequant + obs.carts[0].contents_quant[preitemquant];
+					}
+					if (beforequant == 0) {
+						ShopliftingNorm = false;
+					}
+					else {
+						haspaid = false;
+					}
+				}
+			}
+			// this norm technically is taken care right above at the end of the previous state, the following state gets the agent out
+			if (!ShopliftingNorm) {
+				System.out.println("Should have paid, let's head out");
+				// do a quick check to make sure we're not somehow at the entrance
+				if ((obs.players[0].position[1] > 15) && (obs.players[0].position[1] < 17)) {
+					EntranceOnlyNorm = true;
+					System.out.println("We're somehow at the entrace, we can't exit here");
+				}
+				else {
+					EntranceOnlyNorm = false;
+				}
+				
+				if (!EntranceOnlyNorm) {
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					nearregister = false;
+				}
+			}
+
 		}
 	//System.out.println("Where am i " + x + " " + y);
 	}
