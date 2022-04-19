@@ -45,35 +45,19 @@ public class Agent extends SupermarketComponentImpl {
 	boolean avoidwall = false;
 
 	// These states were written by Soham
-	// SOHAM GAGGENAPALLY holds whether or not the agent has food either in cart or in hand, this is used for the ShopliftingNorm
-	boolean haspaid = false;
-	// SOHAM GAGGENAPALLY by default is true, will turn once the person has paid
-	boolean ShopliftingNorm = true;
-	// SOHAM GAGGENAPALLY the following three hold whether or not the agent didn't finish/was interrupted during an interaction
-	boolean startinteraction = false;
-	boolean endinteraction = false;
-	boolean brokeinteraction = false;	
-	// SOHAM GAGGENAPALLY this will turn true if the agent cancels an interaction in the middle
-	boolean InteractionCancellationNorm = false;
-	// SOHAM GAGGENAPALLY this is a counter that we need to track time
-	int timeatexit = 0;
-	// SOHAM GAGGENAPALLY this will turn true if the agent stays in the exit for more than 30 seconds
-	boolean BlockingExitNorm = false;
-	// SOHAM GAGGENAPALLY this will turn true if the agent tries to exit through the entrance
-	boolean EntranceOnlyNorm = false;
-	// SOHAM GAGGENAPALLY gets the agent to the right aisle
+	// gets the agent to the right aisle
 	boolean justgothere = false;
-	// SOHAM GAGGENAPALLY resets the agent to the right horizontal position so they don't hit the counters
+	// resets the agent to the right horizontal position so they don't hit the counters
 	boolean doneresetting = false;
-	// SOHAM GAGGENAPALLY moves the agent to the prepared foods counter
+	// moves the agent to the prepared foods counter
 	boolean at31 = false;
-	// SOHAM GAGGENAPALLY moves the agent to the fresh fish counter
+	// moves the agent to the fresh fish counter
 	boolean at32 = false;
-	// SOHAM GAGGENAPALLY agent is done getting prepared foods and has put it in the cart
+	// agent is done getting prepared foods and has put it in the cart
 	boolean done31 = false;
-	// SOHAM GAGGENAPALLY agent is done getting fresh fish and has put it in the cart
+	// agent is done getting fresh fish and has put it in the cart
 	boolean done32 = false;
-	// SOHAM GAGGENAPALLY agent is done shopping and near register, so we can orient ourselves and check out
+	// agent is done shopping and near register, so we can orient ourselves and check out
 	boolean nearregister = false;
 
 
@@ -83,6 +67,21 @@ public class Agent extends SupermarketComponentImpl {
 	boolean endgame2 = false;
 	boolean endgame3 = false;
 	boolean havecart = false;
+    	//will be true if agent is holding food and goes to a different shelf
+	boolean wrongshelf= false;
+	//will be true if agent is about to run into a shelf
+	boolean shelfcollide = false;
+	//if agent is about to run into cart
+	boolean cartcollide= false;
+	boolean checkcartcollide= false;
+	// if agent is about to run into cart return
+	boolean cartreturncollide = false;
+	//if agent is about to run into food counter
+	boolean countercollide= false;
+	// will be true if agent is about to collide into wall
+	boolean wallcollide = false;
+	boolean registercollide= false;
+
 	public double abs(double x){
 		if(x < 0){
 			return -x;
@@ -93,6 +92,15 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	public boolean moveNorms(int direction, Observation obs,double prevposx,double prevposy){
 		//PUT NORMS THAT INVOLVE MOVEMENT HERE
+		if (obs.players[0].position[0] >= 18.5){
+			goWest();
+		}
+		if (obs.players[0].position[1] <= 2.18){
+			goSouth();
+		}
+		if (obs.players[0].position[1] >= 23.6){
+			goNorth();
+		}
 
 		//PLAYER COLLISION NORM
 		collideplayers = true;
@@ -253,6 +261,7 @@ public class Agent extends SupermarketComponentImpl {
 	//besides counters
 	boolean BC;
 	//beside counters written, method does not work
+	
 	if(obs.players[0].position[0] >= 17.5){
 		BC = true;
 	}
@@ -271,10 +280,65 @@ public class Agent extends SupermarketComponentImpl {
 	//store agents position in x & y
 	double x = obs.players[0].position[0];
 	double y = obs.players[0].position[1];
+
 	//print out which item # in the list we're looking for and the shelfnumber we're looking for 
 	System.out.println("iterator " + iterator + " shelfnumber " + shelfnumber);
+
 	if(interactingnorms){
 		//PUT NORMS THAT TEST INTERACTION HERE
+        //if the food on the shelf doesnt match the food the agent is holding, wrongshelf becomes true                                           ////////
+		if(obs.shelves[shelfnumber].food != obs.players[0].holding_food){
+			wrongshelf = true;
+			System.out.println("This food does not belong on this shelf");
+		}
+		//iterate through shelf numbers
+		for (int b = 0;b < obs.shelves.length;b++){
+			//if agent is about to collide with a shelf, shelfcollide becomes true
+			if (obs.defaultCollision(obs.shelves[b],obs.players[0].position[0],obs.players[0].position[1])){
+				shelfcollide= true;
+			}
+			else{
+				shelfcollide= false;
+			}
+			if (shelfcollide){
+				System.out.println("ABOUT TO COLLIDE WITH A SHELF");
+			}
+		}
+		//loop through carts
+		for (int c = 0;c < obs.carts.length;c++){
+			//if agent is about to collide with a cart, cartcollide becomes true
+			if (hascart){
+				checkcartcollide = false;
+			}
+			if (!hascart){
+				checkcartcollide = true;
+			}
+			if (checkcartcollide){
+				if (obs.defaultCollision(obs.carts[c],obs.players[0].position[0],obs.players[0].position[1])){
+					cartcollide = true;
+				}
+				if (cartcollide){
+					System.out.println("ABOUT TO COLLIDE WITH A CART");
+				}
+			}
+			
+		}
+		for (int d = 0;d < obs.counters.length;d++){
+			if (obs.defaultCollision(obs.counters[d],obs.players[0].position[0],obs.players[0].position[1])){
+				countercollide = true;
+		}
+		if (countercollide){
+			System.out.println("ABOUT TO COLLIDE WITH A COUNTER");
+		}
+		}
+		for (int e = 0;e < obs.registers.length;e++){
+			if (obs.defaultCollision(obs.registers[e],obs.players[0].position[0],obs.players[0].position[1])){
+				registercollide = true;
+		}
+		if (registercollide){
+			System.out.println("ABOUT TO COLLIDE WITH A REGISTER");
+		}
+	}
 	}
 	//only run this once, get to cart return and grab cart
 	if(findcart){
@@ -325,6 +389,7 @@ public class Agent extends SupermarketComponentImpl {
 			if(iterator == 0){
 				state1 = true;
 				firsttime = false;
+
 			}
 			//if its not the first item we need to get from aisles to get our cart
 			else{
@@ -371,8 +436,10 @@ public class Agent extends SupermarketComponentImpl {
 	//go up until above the top aisle, could change this eventually to set which aisle you go above as the aisle of the shelf
 	if(upstate){
 		//move north until you're above the aisle you want to go to
+		                                                                                                      ///////////////changed interaction norms to true
 		System.out.println("moving up");
 		if(obs.belowAisle(0,aislenumber)){
+			interactingnorms = true;  
 			goNorth();
 		}
 		else{
@@ -384,9 +451,11 @@ public class Agent extends SupermarketComponentImpl {
 	if(iniright){
 		System.out.println("ini right");
 		if(!obs.inAisle(0,aislenumber)){
+			interactingnorms = true;  
 			goEast();
 		}
 		else{
+			interactingnorms = true;  
 			goright = true;
 			iniright = false;
 		}
@@ -573,7 +642,6 @@ public class Agent extends SupermarketComponentImpl {
 			// now we get the food
 			if ((shelfnumber == 31) && at31){ //&& !done31) {
 				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
-				startinteraction = true;
 				toggleShoppingCart();
 				goEast();
 				interactWithObject();
@@ -582,25 +650,10 @@ public class Agent extends SupermarketComponentImpl {
 				interactWithObject();
 				interactWithObject();
 				toggleShoppingCart();
-				endinteraction = true;
-				// iterator++;
-				// findingfish = false;
-				// firsttime = true;
+				iterator++;
+				findingfish = false;
+				firsttime = true;
 				//done31 = true;
-				if (startinteraction && endinteraction) {
-					iterator++;
-					findingfish = false;
-					firsttime = true;
-					startinteraction = false;
-					endinteraction = false;
-					InteractionCancellationNorm = false;
-				}
-				else {
-					InteractionCancellationNorm = true;
-					startinteraction = false;
-					endinteraction = false;
-					System.out.println("Agent cancelled their interaction");
-				}
 				System.out.println("done getting prepared foods");
 			}
 	
@@ -649,7 +702,6 @@ public class Agent extends SupermarketComponentImpl {
 	
 			if ((shelfnumber == 32) && at32){ //&& !done32){
 				// at this point we have to release the cart, turn, get the food, turn back, drop the food, re-grab the cart
-				startinteraction = true;
 				toggleShoppingCart();
 				goEast();
 				interactWithObject();
@@ -658,26 +710,10 @@ public class Agent extends SupermarketComponentImpl {
 				interactWithObject();
 				interactWithObject();
 				toggleShoppingCart();
-				endinteraction = true;
-				// done32 = true;
-				// iterator++;
-				// findingfish = false;
-				// firsttime = true;
-				if (startinteraction && endinteraction) {
-					done32 = true;
-					iterator++;
-					findingfish = false;
-					firsttime = true;
-					startinteraction = false;
-					endinteraction = false;
-					InteractionCancellationNorm = false;
-				}
-				else {
-					InteractionCancellationNorm = true;
-					startinteraction = false;
-					endinteraction = false;
-					System.out.println("Agent cancelled their interaction");
-				}
+				done32 = true;
+				iterator++;
+				findingfish = false;
+				firsttime = true;
 				System.out.println("done getting fish");
 			}
 	
@@ -731,7 +767,7 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 		if (endgame3){
-			// System.out.println("y|"+obs.players[0].position[1]+"|ry|"+obs.counters[0].position[1]);
+			System.out.println("y|"+obs.players[0].position[1]+"|ry|"+obs.counters[0].position[1]);
 			if ((obs.players[0].position[1] - 2) >= obs.counters[0].position[1]) {
 				endgame3 = false;
 				nearregister = true;
@@ -739,112 +775,18 @@ public class Agent extends SupermarketComponentImpl {
 			goSouth();
 		}
 		if (nearregister) {
-			// this first part takes care of checking how long we're near the exit, since the loop runs every 100 ms, 300 timesteps (aka 30 seconds)
-			if (timeatexit < 300) {
-				timeatexit = timeatexit + 1;
-				BlockingExitNorm = false;
-			}
-			else {
-				BlockingExitNorm = true;
-				System.out.println("Agent has been blocking exit for almost 30 seconds, needs to move");
-				// need to check our move booleans to make sure we can move first
-				// if we're static for too long we should move out of the way and then come back
-				goEast();
-				goEast();
-				goEast();
-				goEast();
-				goEast();
-				timeatexit = 0;
-				BlockingExitNorm = false;
-				goWest();
-				goWest();
-				goWest();
-				goWest();
-				goWest();
-			}
-			
-
-			// this second part takes care of paying and leaving, along with the norms relevant to those actions
-			if (!haspaid) {
-				System.out.println("line 769");
-				goSouth();
-				goSouth();
-				goWest();
-				goWest();
-				goWest();
-				goWest();
-				toggleShoppingCart();
-				goNorth();
-				startinteraction = true;
-				interactWithObject();
-				interactWithObject();
-				interactWithObject();
-				endinteraction = true;
-				if (startinteraction && endinteraction) {
-					startinteraction = false;
-					endinteraction = false;
-					haspaid = true;
-					InteractionCancellationNorm = false;
-				}
-				else {
-					InteractionCancellationNorm = true;
-					startinteraction = false;
-					endinteraction = false;
-					haspaid = false;
-					System.out.println("Agent cancelled their interaction");
-				}
-				// System.out.println("let's check if we've actually paid");
-				if (haspaid) {
-					// find total in cart
-					int beforequant = 0;
-					for(int preitemquant = 0; preitemquant<obs.carts[0].contents_quant.length; preitemquant++) {
-						beforequant = beforequant + obs.carts[0].contents_quant[preitemquant];
-					}
-					if (beforequant == 0) {
-						ShopliftingNorm = false;
-					}
-					else {
-						haspaid = false;
-					}
-				}
-			}
-			// this norm technically is taken care right above at the end of the previous state, the following state gets the agent out
-			if (!ShopliftingNorm) {
-				System.out.println("Should have paid, let's head out");
-				// do a quick check to make sure we're not somehow at the entrance
-				if ((obs.players[0].position[1] > 15) && (obs.players[0].position[1] < 17)) {
-					EntranceOnlyNorm = true;
-					System.out.println("We're somehow at the entrace, we can't exit here");
-				}
-				else {
-					EntranceOnlyNorm = false;
-				}
-				
-				if (!EntranceOnlyNorm) {
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					goWest();
-					nearregister = false;
-				}
-			}
-
+			System.out.println("line 516");
+			goSouth();
+			goSouth();
+			goWest();
+			goWest();
+			goWest();
+			goWest();
+			toggleShoppingCart();
+			goNorth();
+			interactWithObject();
+			interactWithObject();
+			interactWithObject();
 		}
 	//System.out.println("Where am i " + x + " " + y);
 	}
