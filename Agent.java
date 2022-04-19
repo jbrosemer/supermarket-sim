@@ -36,6 +36,8 @@ public class Agent extends SupermarketComponentImpl {
 
 	boolean movenorms = false;
 	boolean interactingnorms = false;
+	boolean collideplayers = false;
+	boolean PersonalSpaceNorm = false;
 	//JORDYN BROSEMER norm state that prevents the agent from walking into a wall 
 	boolean avoidwall = false;
 
@@ -62,7 +64,51 @@ public class Agent extends SupermarketComponentImpl {
 	boolean endgame2 = false;
 	boolean endgame3 = false;
 	boolean havecart = false;
+	public int abs(int x){
+		if(x < 0){
+			return -x;
+		}
+		else{
+			return x;
+		}
+	}
+	public boolean moveNorms(int direction, Observation obs){
+		//PUT NORMS THAT INVOLVE MOVEMENT HERE
 
+		//PLAYER COLLISION NORM
+		collideplayers = true;
+		if(collideplayers){
+			//if only one player
+			if(!(obs.players.length>=1)){
+				System.out.println("we're here");
+				double xpos = obs.players[0].position[0];
+				double ypos = obs.players[0].position[1];
+				for(int i=1;i<obs.players.length;i++){
+						if(obs.defaultCollision(obs.players[i],xpos,ypos)){
+							//WILL COLLIDE WITH ANOTHER AGENT
+							collideplayers = false;
+							return false;
+						}
+						else if(i==obs.players.length){
+							collideplayers = false;
+							PersonalSpaceNorm = true;
+						}
+					}
+				}
+			else{
+				//ONLY ONE AGENT
+				System.out.println("theres only one agent");
+				collideplayers = false;
+				//YOU CAN SKIP THE PERSONAL SPACE NORM IF THERE IS ONLY ONE AGENT
+				//PersonalSpaceNorm = true;
+				}
+			}
+		if(PersonalSpaceNorm){
+			
+
+		}
+		return true;
+		}
 
 
 	boolean findingfish = false;
@@ -118,15 +164,6 @@ public class Agent extends SupermarketComponentImpl {
 	double y = obs.players[0].position[1];
 	//print out which item # in the list we're looking for and the shelfnumber we're looking for 
 	System.out.println("iterator " + iterator + " shelfnumber " + shelfnumber);
-	if(movenorms){
-		//PUT NORMS THAT INVOLVE MOVEMENT HERE
-		if(nearplayers){
-
-		}
-		if(bumpingintoplayers){
-
-		}
-	}
 	if(interactingnorms){
 		//PUT NORMS THAT TEST INTERACTION HERE
 	}
@@ -134,12 +171,14 @@ public class Agent extends SupermarketComponentImpl {
 	if(findcart){
 		//go south and interact until you reach the cart return
 		System.out.println("finding cart!");
-		goSouth();
-		interactWithObject();
-		if(hascart){
-			//if you have a cart
-			firsttime = true;
-			findcart = false;
+		if(moveNorms(3,obs)){
+			goSouth();
+			interactWithObject();
+			if(hascart){
+				//if you have a cart
+				firsttime = true;
+				findcart = false;
+			}
 		}
 	}
 	//incremental state for every first time after grabbing a grocery on your list
