@@ -38,6 +38,9 @@ public class Agent extends SupermarketComponentImpl {
 	boolean interactingnorms = false;
 	boolean collideplayers = false;
 	boolean PersonalSpaceNorm = false;
+	boolean unattendedCartNorm = false;
+	boolean OneCartOnlyNorm = false;
+	boolean CartTheftNorm = false;
 	//JORDYN BROSEMER norm state that prevents the agent from walking into a wall 
 	boolean avoidwall = false;
 
@@ -64,7 +67,7 @@ public class Agent extends SupermarketComponentImpl {
 	boolean endgame2 = false;
 	boolean endgame3 = false;
 	boolean havecart = false;
-	public int abs(int x){
+	public double abs(double x){
 		if(x < 0){
 			return -x;
 		}
@@ -72,7 +75,7 @@ public class Agent extends SupermarketComponentImpl {
 			return x;
 		}
 	}
-	public boolean moveNorms(int direction, Observation obs){
+	public boolean moveNorms(int direction, Observation obs,double prevposx,double prevposy){
 		//PUT NORMS THAT INVOLVE MOVEMENT HERE
 
 		//PLAYER COLLISION NORM
@@ -80,7 +83,6 @@ public class Agent extends SupermarketComponentImpl {
 		if(collideplayers){
 			//if only one player
 			if(!(obs.players.length>=1)){
-				System.out.println("we're here");
 				double xpos = obs.players[0].position[0];
 				double ypos = obs.players[0].position[1];
 				for(int i=1;i<obs.players.length;i++){
@@ -99,16 +101,107 @@ public class Agent extends SupermarketComponentImpl {
 				//ONLY ONE AGENT
 				System.out.println("theres only one agent");
 				collideplayers = false;
+				unattendedCartNorm = true;
 				//YOU CAN SKIP THE PERSONAL SPACE NORM IF THERE IS ONLY ONE AGENT
 				//PersonalSpaceNorm = true;
 				}
 			}
 		if(PersonalSpaceNorm){
-			
-
+			double xpos = obs.players[0].position[0];
+			double ypos = obs.players[0].position[1];
+			for(int i=1;i<obs.players.length;i++){
+				if(abs(xpos-obs.players[i].position[0]) <= 1 ){
+					if(abs(ypos-obs.players[i].position[1]) <= 1){
+						//PLAYER IS CLOSE TO ANOTHER PLAYER
+						System.out.println("Player is too close to another player");
+						return false;
+					}
+				}
+				else if(i==obs.players.length-1){
+					PersonalSpaceNorm = false;
+					unattendedCartNorm = true;
+				}
+			}
+		}
+		if(unattendedCartNorm){
+			if(obs.players[0].curr_cart != -1){
+				unattendedCartNorm = false;
+			}
+			//IF THE PLAYER CURRENTLY DOESNT HAVE A CART
+			//THIS IS ASSUMING THAT THE CART IS OWNED BY PLAYER 0
+			else{
+				double xpos = obs.players[0].position[0];
+				double ypos = obs.players[0].position[1];
+				if(obs.carts.length < 1){
+					for(int i = 0;i<obs.carts.length;i++){
+						if(obs.carts[i].owner == 0){
+							//OUR PLAYERS CART IS FOUND
+							if(abs(prevposx-xpos) >= 2){
+								if(abs(prevposy-ypos) >= 2){
+									System.out.println("too far away from your cart");
+									return false;
+								}
+							}
+						}
+						else if(i==obs.players.length-1){
+							unattendedCartNorm = false;
+						}
+					}
+				}
+				else{
+					System.out.println("No carts yet");
+				}
+			}
 		}
 		return true;
+	}
+	public boolean interactingnorms(Observation obs){
+		OneCartOnlyNorm = true;
+		if(OneCartOnlyNorm){
+			if(obs.atCartReturn(0)){
+				if(obs.carts.length < 1){
+					for(int i = 0;i<obs.carts.length;i++){
+						if(obs.carts[i].owner == 0){
+							System.out.println("User already has a cart");
+							OneCartOnlyNorm = false;
+							return false;
+						}
+						else if(i==obs.players.length-1){
+							OneCartOnlyNorm = false;
+						}
+					}
+				}
+				else{
+					System.out.println("No carts yet");
+					OneCartOnlyNorm = false;
+					CartTheftNorm = true;
+				}
+			}
 		}
+		if(CartTheftNorm){
+			if(obs.carts.length < 1){
+				for(int i = 0;i<obs.carts.length;i++){
+					//test if user can interact with a cart
+					if(obs.carts[i].canInteract(obs.players[0])){
+						//test if the cart that the user can interact with is theirs
+						if(!(obs.carts[i].owner == 0)){
+							System.out.println("User is trying to take a cart that isnt theirs");
+							CartTheftNorm = false;
+							return false;
+						}
+					}
+					else if(i==obs.players.length-1){
+						CartTheftNorm = false;
+					}
+				}
+			}
+			else{
+				System.out.println("No carts yet");
+				CartTheftNorm = false;
+			}
+		}
+		return true;
+	}
 
 
 	boolean findingfish = false;
@@ -123,7 +216,7 @@ public class Agent extends SupermarketComponentImpl {
 
 
     @Override
-    protected void executionLoop() {
+    protected void executionLoop(){
 	// this is called every 100ms
 	// put your code in here
 	Observation obs = getLastObservation();
@@ -171,7 +264,7 @@ public class Agent extends SupermarketComponentImpl {
 	if(findcart){
 		//go south and interact until you reach the cart return
 		System.out.println("finding cart!");
-		if(moveNorms(3,obs)){
+		if(moveNorms(3,obs,x,y)){
 			goSouth();
 			interactWithObject();
 			if(hascart){
@@ -288,7 +381,7 @@ public class Agent extends SupermarketComponentImpl {
 		if(!RAH){
 			//check if you can collide with the shelf that has your food
 			if(obs.defaultCollision(obs.shelves[shelfnumber],obs.players[0].position[0],obs.players[0].position[1])){
-				goright = false;
+				goright = false;	
 				//go to middle of shelf state
 				moveuntilnocollide = true;
 				xold = x;
