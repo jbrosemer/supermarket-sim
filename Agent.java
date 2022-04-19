@@ -5,6 +5,7 @@ import java.util.Arrays;
 import com.supermarket.*;
 //JORDYN BROSEMER SOHAM GAGGENAPALLY AND MATTHEW TOVEN *ETHICAL* SUPERMARKET AGENT
 //WHATEVER WAS WRITTEN BY EACH OF US IS DECLARED IN THE BOOLEAN INFORMATION DIRECTLY BELOW
+//THIS CODE CURRENTLY DOES NOT PREVENT THE AGENT FROM PERFOMING 
 public class Agent extends SupermarketComponentImpl {
     public Agent() {
 	super();
@@ -76,13 +77,27 @@ public class Agent extends SupermarketComponentImpl {
 	// SOHAM GAGGENAPALLY agent is done shopping and near register, so we can orient ourselves and check out
 	boolean nearregister = false;
 
-
+	boolean hascart = false;
 	//States written by Matthew Toven
 	boolean endgame = false;
 	boolean endgame1 = false;
 	boolean endgame2 = false;
 	boolean endgame3 = false;
 	boolean havecart = false;
+	//will be true if agent is holding food and goes to a different shelf
+	boolean wrongshelf= false;
+	//will be true if agent is about to run into a shelf
+	boolean shelfcollide = false;
+	//if agent is about to run into cart
+	boolean cartcollide= false;
+	boolean checkcartcollide= false;
+	// if agent is about to run into cart return
+	boolean cartreturncollide = false;
+	//if agent is about to run into food counter
+	boolean countercollide= false;
+	// will be true if agent is about to collide into wall
+	boolean wallcollide = false;
+	boolean registercollide= false;
 	public double abs(double x){
 		if(x < 0){
 			return -x;
@@ -93,7 +108,18 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	public boolean moveNorms(int direction, Observation obs,double prevposx,double prevposy){
 		//PUT NORMS THAT INVOLVE MOVEMENT HERE
-
+		//WALL NORMS MATTHEW TOVEN
+		
+		if (obs.players[0].position[0] >= 18.5){
+			goWest();
+		}
+		if (obs.players[0].position[1] <= 2.18){
+			goSouth();
+		}
+		if (obs.players[0].position[1] >= 23.6){
+			goNorth();
+		}
+		
 		//PLAYER COLLISION NORM
 		collideplayers = true;
 		if(collideplayers){
@@ -142,13 +168,13 @@ public class Agent extends SupermarketComponentImpl {
 		if(unattendedCartNorm){
 			if(obs.players[0].curr_cart != -1){
 				unattendedCartNorm = false;
-			}
-			//IF THE PLAYER CURRENTLY DOESNT HAVE A CART
-			//THIS IS ASSUMING THAT THE CART IS OWNED BY PLAYER 0
+				hascart = false;
+			} //IF THE PLAYER CURRENTLY DOESNT HAVE A CART THIS IS ASSUMING THAT THE CART IS OWNED BY PLAYER 0
 			else{
+				hascart = true;
 				double xpos = obs.players[0].position[0];
 				double ypos = obs.players[0].position[1];
-				if(obs.carts.length < 1){
+				if(obs.carts.length > 1){
 					for(int i = 0;i<obs.carts.length;i++){
 						if(obs.carts[i].owner == 0){
 							//OUR PLAYERS CART IS FOUND
@@ -169,9 +195,65 @@ public class Agent extends SupermarketComponentImpl {
 				}
 			}
 		}
+		//OBJECT COLLISION NORMS WRITTEN BY MATTHEW TOVEN
+		//iterate through shelf numbers
+		for (int b = 0;b < obs.shelves.length;b++){
+			//if agent is about to collide with a shelf, shelfcollide becomes true
+			if (obs.defaultCollision(obs.shelves[b],obs.players[0].position[0],obs.players[0].position[1])){
+				shelfcollide= true;
+			}
+			else{
+				shelfcollide= false;
+			}
+			if (shelfcollide){
+				System.out.println("ABOUT TO COLLIDE WITH A SHELF");
+			}
+		}
+		//loop through carts
+		for (int c = 0;c < obs.carts.length;c++){
+			//if agent is about to collide with a cart, cartcollide becomes true
+			if(hascart){
+				checkcartcollide = false;
+			}
+			if(!hascart){
+				checkcartcollide = true;
+			}
+			if (checkcartcollide){
+				if (obs.defaultCollision(obs.carts[c],obs.players[0].position[0],obs.players[0].position[1])){
+					cartcollide = true;
+				}
+				if (cartcollide){
+					System.out.println("ABOUT TO COLLIDE WITH A CART");
+				}
+			}
+
+		}
+		for (int d = 0;d < obs.counters.length;d++){
+			if (obs.defaultCollision(obs.counters[d],obs.players[0].position[0],obs.players[0].position[1])){
+				countercollide = true;
+		}
+		if (countercollide){
+			System.out.println("ABOUT TO COLLIDE WITH A COUNTER");
+		}
+		}
+		for (int e = 0;e < obs.registers.length;e++){
+			if (obs.defaultCollision(obs.registers[e],obs.players[0].position[0],obs.players[0].position[1])){
+				registercollide = true;
+		}
+		if (registercollide){
+			System.out.println("ABOUT TO COLLIDE WITH A REGISTER");
+		}
+	}
 		return true;
 	}
 	public boolean interactingnorms(Observation obs){
+		//PUT NORMS THAT INVOLVE INTERACTION HERE
+        //if the food on the shelf doesnt match the food the agent is holding, wrongshelf becomes true   
+
+		if(obs.shelves[shelfnumber].food != obs.players[0].holding_food){
+			wrongshelf = true;
+			System.out.println("This food does not belong on this shelf");
+		}
 		OneCartOnlyNorm = true;
 		if(OneCartOnlyNorm){
 			if(obs.atCartReturn(0)){
@@ -260,7 +342,6 @@ public class Agent extends SupermarketComponentImpl {
 		BC = false;
 	}
 	//check if the agent has a cart
-	boolean hascart = false;
 	if(obs.players[0].curr_cart == -1){
 		hascart = false;
 	}
